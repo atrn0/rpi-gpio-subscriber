@@ -1,2 +1,4 @@
 .idea
-gcpubsub-key.json
+iot-core/key
+iot-core/roots.pem
+iot-core/iot-core
