@@ -1,5 +1,8 @@
+import json
+
 import paho.mqtt.client as mqtt
 
+from gpio.cmd_handler import handle_cmd
 from iotcore import client
 
 
@@ -31,6 +34,8 @@ def on_message(unused_client, unused_userdata, message):
     payload = str(message.payload.decode('utf-8'))
     print('Received message \'{}\' on topic \'{}\' with Qos {}'.format(
         payload, message.topic, str(message.qos)))
+    data = json.loads(payload)
+    handle_cmd(data['cmd'], data['pin'])
 
 
 def __error_str(rc):
