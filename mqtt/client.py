@@ -44,14 +44,18 @@ def create_jwt(project_id, private_key_file, algorithm):
 class Client:
     def __init__(self, project_id, cloud_region, registry_id, device_id, private_key_file,
                  algorithm, ca_certs, mqtt_bridge_hostname, mqtt_bridge_port):
-        self.project_id = project_id
-        self.cloud_region = cloud_region
-        self.registry_id = registry_id
-        self.device_id = device_id
+        self.MAXIMUM_BACKOFF_TIME = 32
+        self.PROJECT_ID = project_id
+        self.CLOUD_REGION = cloud_region
+        self.REGISTRY_ID = registry_id
+        self.DEVICE_ID = device_id
+
+        self.should_backoff = False
+        self.minimum_backoff_time = 1
 
         """Create our MQTT client. The client_id is a unique string that identifies
         this device. For Google Cloud IoT Core, it must be in the format below."""
-        self.client = mqtt.Client(client_id=self.__get_client_id(project_id, cloud_region, registry_id, device_id))
+        self.client = mqtt.Client(client_id=self.__get_client_id())
 
         # With Google Cloud IoT Core, the username field is ignored, and the
         # password field is used to transmit a JWT to authorize the device.
@@ -65,10 +69,10 @@ class Client:
         # describes additional callbacks that Paho supports. In this example, the
         # callbacks just print to standard out.
         self.__register_handler()
-        
+
     def __get_client_id(self):
         return 'projects/{}/locations/{}/registries/{}/devices/{}'.format(
-            self.project_id, self.cloud_region, self.registry_id, self.device_id)
+            self.PROJECT_ID, self.CLOUD_REGION, self.REGISTRY_ID, self.DEVICE_ID)
 
     def __register_handler(self):
         self.client.on_connect = handler.on_connect
