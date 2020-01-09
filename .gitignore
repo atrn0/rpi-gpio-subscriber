@@ -1,4 +1,4 @@
 .idea
-iot-core/key
-iot-core/roots.pem
+key
+roots.pem
 iot-core/iot-core

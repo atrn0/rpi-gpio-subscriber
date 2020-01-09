@@ -124,7 +124,7 @@ def main():
     registry_id = "rpi-garage"
     region = "asia-east1"
     algorithm = "RS256"
-    private_key_file = "/Users/ataran/workspace/rpi-gpio-subscriber/iot-core/key/rsa_private.pem"
+    private_key_file = "/key/rsa_private.pem"
     mqtt_bridge_hostname = "mqtt.googleapis.com"
     mqtt_bridge_port = 8883
     ca_certs = "/Users/ataran/workspace/rpi-gpio-subscriber/iot-core/roots.pem"
