@@ -1,15 +1,15 @@
 import paho.mqtt.client as mqtt
 
+from iotcore import client
+
 
 def on_connect(unused_client, unused_userdata, unused_flags, rc):
     """Callback for when a device connects."""
     print('on_connect', mqtt.connack_string(rc))
 
     # After a successful connect, reset backoff time and stop backing off.
-    global should_backoff
-    global minimum_backoff_time
-    should_backoff = False
-    minimum_backoff_time = 1
+    client.should_backoff = False
+    client.minimum_backoff_time = 1
 
 
 def on_disconnect(unused_client, unused_userdata, rc):
@@ -18,8 +18,7 @@ def on_disconnect(unused_client, unused_userdata, rc):
 
     # Since a disconnect occurred, the next loop iteration will wait with
     # exponential backoff.
-    global should_backoff
-    should_backoff = True
+    client.should_backoff = True
 
 
 def on_publish(unused_client, unused_userdata, unused_mid):

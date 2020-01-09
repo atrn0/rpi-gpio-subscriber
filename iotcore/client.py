@@ -1,10 +1,17 @@
 import datetime
+import os
+import random
 import ssl
+import time
 
 import jwt
 import paho.mqtt.client as mqtt
 
-from mqtt import handler
+from iotcore import handler
+
+MAXIMUM_BACKOFF_TIME = 257
+
+should_backoff = False
 
 
 def create_jwt(project_id, private_key_file, algorithm):
@@ -44,13 +51,12 @@ def create_jwt(project_id, private_key_file, algorithm):
 class Client:
     def __init__(self, project_id, cloud_region, registry_id, device_id, private_key_file,
                  algorithm, ca_certs, mqtt_bridge_hostname, mqtt_bridge_port):
-        self.MAXIMUM_BACKOFF_TIME = 32
         self.PROJECT_ID = project_id
         self.CLOUD_REGION = cloud_region
         self.REGISTRY_ID = registry_id
         self.DEVICE_ID = device_id
-
-        self.should_backoff = False
+        self.BRIDGE_HOSTNAME = mqtt_bridge_hostname
+        self.BRIDGE_PORT = mqtt_bridge_port
         self.minimum_backoff_time = 1
 
         """Create our MQTT client. The client_id is a unique string that identifies
@@ -70,6 +76,18 @@ class Client:
         # callbacks just print to standard out.
         self.__register_handler()
 
+    def connect(self):
+        global should_backoff
+        # Connect to the Google MQTT bridge.
+        self.client.connect(self.BRIDGE_HOSTNAME, self.BRIDGE_PORT)
+        # Subscribe to the config topic.
+        self.client.subscribe('/devices/{}/config'.format(self.DEVICE_ID), qos=1)
+        # Subscribe to the commands topic, QoS 1 enables message acknowledgement.
+        self.client.subscribe('/devices/{}/commands/#'.format(self.DEVICE_ID), qos=0)
+        if not should_backoff:
+            print('subscribing to config and commands')
+            self.__wait()
+
     def __get_client_id(self):
         return 'projects/{}/locations/{}/registries/{}/devices/{}'.format(
             self.PROJECT_ID, self.CLOUD_REGION, self.REGISTRY_ID, self.DEVICE_ID)
@@ -79,3 +97,23 @@ class Client:
         self.client.on_publish = handler.on_publish
         self.client.on_disconnect = handler.on_disconnect
         self.client.on_message = handler.on_message
+
+    def __wait(self):
+        global should_backoff
+        global MAXIMUM_BACKOFF_TIME
+        while True:
+            self.client.loop()
+            if should_backoff:
+                # If backoff time is too large, give up.
+                if self.minimum_backoff_time > MAXIMUM_BACKOFF_TIME:
+                    print('Exceeded maximum backoff time. Giving up.')
+                    break
+
+                # Otherwise, wait and connect again.
+                delay = self.minimum_backoff_time + random.randint(0, 1000) / 1000.0
+                print('Waiting for {} before reconnecting.'.format(delay))
+                time.sleep(delay)
+                self.minimum_backoff_time *= 2
+                print("reconnecting...")
+                self.connect()
+                time.sleep(2)
