@@ -1,8 +1,8 @@
 from gpiozero import LED
 
 
-def push(pin):
-    LED(pin).blink(on_time=0.2, n=1)
+def push(pin, duration):
+    LED(pin).blink(on_time=duration, n=1)
 
 
 def on(pin):
