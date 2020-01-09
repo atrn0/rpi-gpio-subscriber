@@ -1,5 +1,3 @@
-from _signal import pause
-
 from gpiozero import LED
 
 
@@ -7,18 +5,15 @@ def push(pin, duration):
     print(f'push {pin}')
     pin = LED(pin)
     pin.blink(on_time=duration, n=1)
-    pause()
 
 
 def on(pin):
     print(f'on {pin}')
     pin = LED(pin)
     pin.on()
-    pause()
 
 
 def off(pin):
     print(f'off {pin}')
     pin = LED(pin)
     pin.off()
-    pause()
