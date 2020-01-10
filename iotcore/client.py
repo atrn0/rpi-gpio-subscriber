@@ -57,6 +57,8 @@ class Client:
         self.DEVICE_ID = device_id
         self.BRIDGE_HOSTNAME = mqtt_bridge_hostname
         self.BRIDGE_PORT = mqtt_bridge_port
+        self.PRIVATE_KEY_FILE = private_key_file
+        self.ALGORITHM = algorithm
         self.minimum_backoff_time = 1
 
         """Create our MQTT client. The client_id is a unique string that identifies
@@ -117,3 +119,8 @@ class Client:
                 print("reconnecting...")
                 self.connect()
                 time.sleep(2)
+
+    def renew_token(self):
+        self.client.username_pw_set(username='unused',
+                                    password=create_jwt(
+                                        self.PROJECT_ID, self.PRIVATE_KEY_FILE, self.ALGORITHM))
