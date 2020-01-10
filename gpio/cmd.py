@@ -4,7 +4,7 @@ from gpiozero import DigitalOutputDevice
 
 pins = list(
     map(
-        lambda pin: DigitalOutputDevice(pin, active_high=False, initial_value=True),
+        lambda pin: DigitalOutputDevice(pin, active_high=False, initial_value=False),
         range(1, 26)
     )
 )
