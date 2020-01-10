@@ -1,8 +1,13 @@
 from time import sleep
 
-from gpiozero import LED
+from gpiozero import DigitalOutputDevice
 
-pins = list(map(LED, range(1, 26)))
+pins = list(
+    map(
+        lambda pin: DigitalOutputDevice(pin, active_high=False, initial_value=True),
+        range(1, 26)
+    )
+)
 
 
 def push(pin, duration):
