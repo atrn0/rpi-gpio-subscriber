@@ -12,6 +12,7 @@ from iotcore import handler
 MAXIMUM_BACKOFF_TIME = 257
 
 should_backoff = False
+token_issued_at = datetime.datetime.utcnow()
 
 
 def create_jwt(project_id, private_key_file, algorithm):
@@ -28,6 +29,7 @@ def create_jwt(project_id, private_key_file, algorithm):
         Raises:
             ValueError: If the private_key_file does not contain a known key.
         """
+    global token_issued_at
 
     token = {
         # The time that the token was issued at
@@ -41,6 +43,9 @@ def create_jwt(project_id, private_key_file, algorithm):
     # Read the private key file.
     with open(private_key_file, 'r') as f:
         private_key = f.read()
+
+    # update token_issued_at
+    token_issued_at = token['iat']
 
     print('Creating JWT using {} from private key file {}'.format(
         algorithm, private_key_file))
@@ -101,8 +106,9 @@ class Client:
         self.client.on_message = handler.on_message
 
     def __wait(self):
-        global should_backoff
         global MAXIMUM_BACKOFF_TIME
+        global should_backoff
+        global token_issued_at
         while True:
             self.client.loop()
             if should_backoff:
@@ -119,8 +125,11 @@ class Client:
                 print("reconnecting...")
                 self.connect()
                 time.sleep(2)
+            if token_issued_at + datetime.timedelta(minutes=60) < datetime.datetime.utcnow():
+                self.__renew_token()
+                time.sleep(1)
 
-    def renew_token(self):
+    def __renew_token(self):
         self.client.username_pw_set(username='unused',
                                     password=create_jwt(
                                         self.PROJECT_ID, self.PRIVATE_KEY_FILE, self.ALGORITHM))
