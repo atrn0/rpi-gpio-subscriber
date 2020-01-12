@@ -112,22 +112,16 @@ class Client:
         while True:
             self.client.loop()
             if should_backoff:
-                # If backoff time is too large, give up.
-                if self.minimum_backoff_time > MAXIMUM_BACKOFF_TIME:
-                    print('Exceeded maximum backoff time. Giving up.')
-                    break
-
-                # Otherwise, wait and connect again.
+                self.__renew_token()
                 delay = self.minimum_backoff_time + random.randint(0, 1000) / 1000.0
                 print('Waiting for {} before reconnecting.'.format(delay))
                 time.sleep(delay)
                 self.minimum_backoff_time *= 2
                 print("reconnecting...")
                 self.connect()
-                time.sleep(2)
             if token_issued_at + datetime.timedelta(minutes=60) < datetime.datetime.utcnow():
                 self.__renew_token()
-                time.sleep(1)
+            time.sleep(2)
 
     def __renew_token(self):
         self.client.username_pw_set(username='unused',
